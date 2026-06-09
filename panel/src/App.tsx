@@ -18,16 +18,34 @@ function App() {
         setY(data.y)
       })
 
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const ws = new WebSocket(`${protocol}//${location.host}/ws`)
+    let ws: WebSocket
+    let reconnectTimer: ReturnType<typeof setTimeout>
+    let active = true
 
-    ws.onmessage = (event) => {
-      const data: Dummy = JSON.parse(event.data)
-      setX(data.x)
-      setY(data.y)
+    const connect = () => {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+      ws = new WebSocket(`${protocol}//${location.host}/ws`)
+
+      ws.onmessage = (event) => {
+        const data: Dummy = JSON.parse(event.data)
+        setX(data.x)
+        setY(data.y)
+      }
+
+      ws.onclose = () => {
+        if (active) {
+          reconnectTimer = setTimeout(connect, 1000)
+        }
+      }
     }
 
-    return () => ws.close()
+    connect()
+
+    return () => {
+      active = false
+      clearTimeout(reconnectTimer)
+      ws.close()
+    }
   }, [])
 
   return (
