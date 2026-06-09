@@ -1,0 +1,23 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: sans-serif;
+}
+
+.panel {
+  padding: 2rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.plane {
+  display: block;
+}
