@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
@@ -20,7 +21,8 @@ public class DummyWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        sessions.put(session.getId(), session);
+        WebSocketSession decorated = new ConcurrentWebSocketSessionDecorator(session, 1000, 64 * 1024);
+        sessions.put(session.getId(), decorated);
     }
 
     @Override
@@ -30,11 +32,11 @@ public class DummyWebSocketHandler extends TextWebSocketHandler {
 
     public void broadcast(DummyDto dto) {
         try {
-            TextMessage message = new TextMessage(objectMapper.writeValueAsString(dto));
+            String payload = objectMapper.writeValueAsString(dto);
 
             for (WebSocketSession session : sessions.values()) {
                 if (session.isOpen()) {
-                    session.sendMessage(message);
+                    session.sendMessage(new TextMessage(payload));
                 }
             }
         } catch (IOException e) {
